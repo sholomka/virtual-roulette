@@ -4,11 +4,14 @@ namespace  Application\Core;
 
 use Application\Core\View;
 use Application\Core\ApplicationRegistry;
+use Application\Core\SessionRegistry;
+use Application\Core\RequestRegistry;
 
 /**
  * Class Controller - основной контроллер приложения
  * @package Application\Core
  */
+
 abstract class Controller
 {
     /**
@@ -16,21 +19,28 @@ abstract class Controller
      *
      * @var
      */
-    public $model;
+    protected $model;
 
     /**
      * Вид
      *
      * @var \Application\Core\View
      */
-    public $view;
+    protected $view;
 
     /**
      * Запрос пользователя
      *
      * @var Request
      */
-    public $request;
+    protected $request;
+
+    /**
+     * Реестр уровня сессии
+     *
+     * @var \Application\Core\SessionRegistry|null
+     */
+    protected $sessionRegistry;
 
     /**
      * Controller constructor.
@@ -39,8 +49,8 @@ abstract class Controller
     {
         session_start();
         $this->view = new View();
-        $registry = ApplicationRegistry::instance();
-        $this->request = $registry->getRequest();
+        $this->sessionRegistry = SessionRegistry::instance();
+        $this->request = RequestRegistry::instance()->getRequest();
     }
 
     /**

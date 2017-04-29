@@ -45,7 +45,7 @@ class ApplicationRegistry extends Registry
      */
     private function __construct()
     {
-        $this->config = realpath(implode(DIRECTORY_SEPARATOR, array(__DIR__, '..', 'config', 'config.php')));
+        $this->config = realpath(implode(DIRECTORY_SEPARATOR, [__DIR__, '..', 'config', 'web.xml']));
     }
 
     /**
@@ -80,12 +80,14 @@ class ApplicationRegistry extends Registry
     private function getOptions()
     {
         $this->ensure(file_exists($this->config), 'Файл конфигурации не найден');
-        $options = require_once($this->config);
+        $options = @SimpleXML_load_file($this->config);
 
-        $dsn = 'mysql:host='. $options['db']['host'] .';dbname='. $options['db']['dbname'] .';charset='. $options['db']['charset'];
-        $username = $options['db']['username'];
-        $password = $options['db']['password'];
+        $dsn = $options->dsn;
+        $username = $options->username;
+        $password = $options->password;
 
+        $this->ensure($options instanceof \SimpleXMLElement, 'Файл конфигурации запорчен');
+        $this->ensure($dsn, 'DSN не найден');
         self::setDSN($dsn);
         self::setUserName($username);
         self::setPassword($password);
@@ -177,22 +179,6 @@ class ApplicationRegistry extends Registry
     public static function getPassword()
     {
         return self::instance()->get('password');
-    }
-
-    /**
-     * Получает объект запроса пользователя
-     *
-     * @return \Application\Core\Request
-     */
-    public static function getRequest()
-    {
-        $instance = self::instance();
-
-        if (is_null($instance->request)) {
-            $instance->request = new Request();
-        }
-
-        return $instance->request;
     }
 
     /**

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<db>
+    <username>root</username>
+    <password></password>
+    <dsn>mysql:host=localhost;dbname=virtual-roulette;charset=utf8</dsn>
+</db>

@@ -3,7 +3,6 @@
 namespace  Application\Controllers;
 
 use Application\Core\Controller;
-use Application\Core\SessionRegistry;
 use Application\Models\ModelMain;
 
 /**
@@ -26,17 +25,11 @@ class ControllerMain extends Controller
      */
     public function actionIndex()
     {
-
-        $sessionRegistry = SessionRegistry::instance();
-
-        if ($sessionRegistry->isEmpty()) {
+        if ($this->sessionRegistry->isEmpty()) {
             $this->view->generate('login_view.php', 'template_view.php');
         } else {
             $this->view->generate('main_view.php', 'template_view.php');
         }
-
-
-
     }
 }
 

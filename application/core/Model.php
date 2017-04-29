@@ -3,6 +3,7 @@
 namespace  Application\Core;
 
 use Application\Core\ApplicationRegistry;
+use Application\Core\RequestRegistry;
 
 /**
  * Class Model - основная модель приложения
@@ -27,13 +28,13 @@ abstract class Model
      */
     public function __construct()
     {
-        $registry = ApplicationRegistry::instance();
-        $registry->init();
-        $dsn = $registry->getDSN();
-        $username = $registry->getUserName();
-        $password = $registry->getPassword();
-        $this->request = $registry->getRequest();
-        $registry->ensure($dsn, 'DSN не определен');
+        $applicationRegistry = ApplicationRegistry::instance();
+        $applicationRegistry->init();
+        $dsn = $applicationRegistry->getDSN();
+        $username = $applicationRegistry->getUserName();
+        $password = $applicationRegistry->getPassword();
+        $this->request = RequestRegistry::instance()->getRequest();
+        $applicationRegistry->ensure($dsn, 'DSN не определен');
         self::$DB = new \PDO($dsn, $username, $password);
         self::$DB->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }

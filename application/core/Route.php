@@ -2,7 +2,7 @@
 
 namespace  Application\Core;
 
-use Application\Core\ApplicationRegistry;
+use Application\Core\RequestRegistry;
 
 /**
  * Class Route - основной роутер приложения
@@ -25,8 +25,7 @@ class Route
      */
     public static function start()
     {
-        $registry = ApplicationRegistry::instance();
-        $request = $registry->getRequest();
+        $request = RequestRegistry::instance()->getRequest();
         $actionName = self::ACTION_NAME;
         $controllerName = self::CONTROLLER_NAME;
         $firstUrlPart = $request->getUrlPart(1);
