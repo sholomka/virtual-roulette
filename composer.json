@@ -1,0 +1,42 @@
+{
+  "name": "sholomka/mvc_client",
+  "description": "package for mvc.",
+  "keywords": [
+    "mvc"
+  ],
+  "homepage": "https://github.com/sholomka/mvc",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Yuriy Sholom",
+
+      "email": "sholomka@gmail.com",
+
+      "homepage": "https://github.com/sholomka",
+
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php" : ">=5.5.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "Application\\Core\\": "application/core",
+      "Application\\Core\\File\\": "application/core/file",
+      "Application\\Exceptions\\": "application/exceptions"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Application\\Core\\": "application/core",
+      "Application\\Core\\File\\": "application/core/file",
+      "Application\\Exceptions\\": "application/exceptions"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0-dev"
+    }
+  }
+}

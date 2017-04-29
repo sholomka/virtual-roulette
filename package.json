@@ -1,0 +1,27 @@
+{
+  "name": "packages",
+  "version": "1.0.0",
+  "description": "1.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git"
+  },
+  "dependencies": {
+    "babel-core": "6.22.1",
+    "babel-loader": "6.2.10",
+    "babel-preset-es2015": "^6.13.2",
+    "css-loader": "0.13.1",
+    "extract-text-webpack-plugin": "2.0.0-beta.5",
+    "file-loader": "0.9.0",
+    "memcached": "~2.2.2",
+    "node-sass": "4.3.0",
+    "resolve-url-loader": "1.6.1",
+    "sass-loader": "4.1.1",
+    "sequelize": "~3.30.4",
+    "mysql": "~2.13.0",
+    "socket.io": "~1.7.3",
+    "style-loader": "0.13.1",
+    "webpack": "2.2.0",
+    "config": "1.25.1"
+  }
+}
