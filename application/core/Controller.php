@@ -42,12 +42,12 @@ abstract class Controller
      */
     protected $sessionRegistry;
 
+
     /**
      * Controller constructor.
      */
     public function __construct()
     {
-        session_start();
         $this->view = new View();
         $this->sessionRegistry = SessionRegistry::instance();
         $this->request = RequestRegistry::instance()->getRequest();

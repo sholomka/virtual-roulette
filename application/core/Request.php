@@ -29,6 +29,8 @@ class Request
         if (isset($_SERVER['REQUEST_METHOD'])) {
             $this->properties = $_REQUEST;
         }
+
+        $this->setJSONdata();
     }
 
     /**
@@ -92,6 +94,29 @@ class Request
         }
 
         return null;
+    }
+
+    /**
+     * Проверяет POST запрос или нет
+     *
+     * @return bool
+     */
+    public function isPost()
+    {
+        return $this->getServer('REQUEST_METHOD') === 'POST' ? true : false;
+    }
+
+    /**
+     * Обработка JSON данных с клиента
+     */
+    public function setJSONdata()
+    {
+        if (strpos($this->getServer('CONTENT_TYPE'), 'application/json') !== false) {
+            $properties = json_decode(trim(file_get_contents('php://input')), true);
+            if (!empty($properties)) {
+                $this->properties = array_merge($this->properties, $properties);
+            }
+        }
     }
 }
 

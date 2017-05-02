@@ -1,86 +1,49 @@
-import { files } from 'Classes/Files';
+import { ajax } from 'Classes/Ajax';
+import { request } from 'Classes/Request';
 
 class Main {
-    static get AJAX_USER_UPLOAD_FILE_URL() {
-        return '/edit/imageUpload';
+    static get AJAX_USER_CROP_PHOTO_URL() {
+        return '/admin/makeBet';
     }
 
     static get BASICMODAL() {
         return $('#basicModal');
     }
 
-    static get ADD_TASK() {
-        return $('.add-task');
-    }
-
     constructor() {
-        this.tablePaginationAndSortInit();
-        this.changeImage();
-        this.preview();
+        this.makeBet();
     }
 
-    preview() {
-        Main.ADD_TASK.on('click', '.preview', function() {
-            let name = Main.ADD_TASK.find('input[name="name"]').val(),
-                email = Main.ADD_TASK.find('input[name="email"]').val(),
-                description = Main.ADD_TASK.find('input[name="description"]').val(),
-                fileName = Main.ADD_TASK.find('img').attr('src'),
-                imagePath = `${fileName}`;
+    makeBet() {
+        $('.make-bet').submit(function(e) {
+            e.preventDefault();
 
-            let img = new Image();
-            img.src = imagePath;
-            img.width = 320;
-            img.height = 240;
+            let amount = $('#amount').val(),
+                number = $('#number').val();
 
-            Main.BASICMODAL.find('.name').text(name);
-            Main.BASICMODAL.find('.email').text(email);
-            Main.BASICMODAL.find('.description').text(description);
-            Main.BASICMODAL.find('.image').html(img);
-            Main.BASICMODAL.modal('show');
-        });
-    }
-
-    tablePaginationAndSortInit() {
-        $('#main-table, #admin-table').dataTable( {
-            "pageLength": 3,
-            "lengthChange": false
-        } );
-    }
-
-    changeImage() {
-        $('.add-task').on('change', 'input[type=file]', (e) => {
-            let file = $(e.currentTarget)[0].files[0],
-                image = file.name,
-                callback = (response) => {
-                    let imagePath = `/images/${response.filename}`;
-
-                    if ($('.add-task img').size() > 0) {
-                        $('.add-task img').attr('src', imagePath);
-                    } else {
-                        let img = new Image();
-                        img.src = imagePath;
-                        img.width = 320;
-                        img.height = 240;
-
-                        $('.btn-file').after(img);
-                    }
-                };
-
-            this.filesUploadData = {
-                file: file,
-                callback: callback,
-                url: Main.AJAX_USER_UPLOAD_FILE_URL
+            let  params = {
+                url:  Main.AJAX_USER_CROP_PHOTO_URL,
+                data: {
+                    T: 'n',
+                    I: number,
+                    C: '1',
+                    K: amount,
+                }
             };
 
-            this.filesUpload();
+
+            ajax.buildParams(params);
+            request.makeRequest(function(responce) {
+
+                Main.BASICMODAL.find('h3').text(responce.message);
+                Main.BASICMODAL.modal('show');
+
+
+
+            });
         });
     }
 
-    filesUpload() {
-        if (this.filesUploadData.file) {
-            files.upload(this.filesUploadData);
-        }
-    }
 }
 
 export let main = new Main();

@@ -2,6 +2,7 @@
 
 namespace Application\Core;
 
+use Application\Core\User;
 
 /**
  * Class SessionRegistry реестр на уровне сессии
@@ -9,6 +10,11 @@ namespace Application\Core;
  */
 class SessionRegistry extends Registry
 {
+    /**
+     * Время бездействия, после которого юзер разлогинится
+     */
+    const LOGOUT_TIME = 300;
+
     /**
      * Синглтон
      *
@@ -22,6 +28,12 @@ class SessionRegistry extends Registry
     private function __construct()
     {
         session_start();
+
+        if (!isset($_SESSION['timestamp'])) {
+            $this->set('timestamp', time());
+        } else if (time() - $this->get('timestamp') > self::LOGOUT_TIME){
+            User::logout();
+        }
     }
 
     /**
@@ -62,6 +74,30 @@ class SessionRegistry extends Registry
     protected function set($key, $val)
     {
        $_SESSION[__CLASS__][$key] = $val;
+    }
+
+    /**
+     * @param $user
+     */
+    public function setUser($user)
+    {
+        self::instance()->set('user', $user);
+    }
+
+    /**
+     * @return null
+     */
+    public function getUser()
+    {
+        return self::instance()->get('user');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUserId()
+    {
+        return self::instance()->getUser()->id;
     }
 
     /**

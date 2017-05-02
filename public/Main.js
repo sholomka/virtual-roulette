@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,64 +77,129 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Files = function () {
-    function Files() {
-        _classCallCheck(this, Files);
+/**
+ * Ajax component
+ */
+var Ajax = function () {
+    function Ajax() {
+        _classCallCheck(this, Ajax);
+
+        this.params = {
+            method: 'POST',
+            contentType: 'application/json',
+            data: {}
+        };
     }
 
-    _createClass(Files, [{
-        key: 'upload',
-        value: function upload(data) {
-            var xhr = new XMLHttpRequest();
+    _createClass(Ajax, [{
+        key: 'makeRequest',
+        value: function makeRequest() {
+            var params = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.params;
 
-            // обработчик для закачки
-            xhr.upload.onprogress = function (event) {
-                console.log(event.loaded + ' / ' + event.total);
-            };
+            return new Promise(function (resolve, reject) {
+                var xhr = new XMLHttpRequest(),
+                    body = '';
 
-            // обработчики успеха и ошибки
-            // если status == 200, то это успех, иначе ошибка
-            xhr.onload = xhr.onerror = function () {
-                if (this.status == 200) {
-                    if (typeof data.callback === 'function') {
+                xhr.onload = xhr.onerror = function () {
+                    if (xhr.status === 200) {
                         try {
                             var response = JSON.parse(xhr.responseText);
-                            data.callback(response);
+                            resolve(response);
                         } catch (e) {
-                            console.error('Invalid JSON data. Maybe return Fatal Error on PHP: ' + e);
+                            reject('Invalid JSON data. Maybe return Fatal Error on PHP: ' + e);
                         }
+                    } else {
+                        reject('Server Error: ' + xhr.status);
                     }
+                };
 
-                    console.log("success");
-                } else {
-                    console.log("error " + this.status);
+                xhr.open(params.method, params.url, true);
+
+                switch (params.contentType) {
+                    case 'x-www-form-urlencoded':
+                        var i = 0;
+
+                        for (var param in params.data) {
+                            body += (i > 0 ? '&' + param : param) + '=' + encodeURIComponent(params.data[param]);
+                            i++;
+                        }
+
+                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=utf-8');
+                        break;
+                    default:
+                        body = JSON.stringify(params.data);
+                        xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
                 }
-            };
 
-            var formData = new FormData();
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 
-            if (_typeof(data.file) === 'object') {
-                formData.append("image", data.file);
+                xhr.send(body);
+            });
+        }
+    }, {
+        key: 'buildParams',
+        value: function buildParams(params) {
+            for (var filterName in params) {
+                if (params.hasOwnProperty(filterName)) {
+                    this.params[filterName] = params[filterName];
+                }
             }
-
-            xhr.open("POST", data.url, true);
-            xhr.send(formData);
         }
     }]);
 
-    return Files;
+    return Ajax;
 }();
 
-var files = exports.files = new Files();
+var ajax = exports.ajax = new Ajax();
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.request = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _Ajax = __webpack_require__(0);
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Request component
+ */
+var Request = function () {
+    function Request() {
+        _classCallCheck(this, Request);
+    }
+
+    _createClass(Request, [{
+        key: "makeRequest",
+        value: function makeRequest(successCallBack) {
+            _Ajax.ajax.makeRequest().then(function (response) {
+                return successCallBack(response);
+            }).catch(function (error) {
+                return console.error(error);
+            });
+        }
+    }]);
+
+    return Request;
+}();
+
+var request = exports.request = new Request();
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -147,104 +212,57 @@ exports.main = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _Files = __webpack_require__(0);
+var _Ajax = __webpack_require__(0);
+
+var _Request = __webpack_require__(1);
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Main = function () {
     _createClass(Main, null, [{
-        key: 'AJAX_USER_UPLOAD_FILE_URL',
+        key: 'AJAX_USER_CROP_PHOTO_URL',
         get: function get() {
-            return '/edit/imageUpload';
+            return '/admin/makeBet';
         }
     }, {
         key: 'BASICMODAL',
         get: function get() {
             return $('#basicModal');
         }
-    }, {
-        key: 'ADD_TASK',
-        get: function get() {
-            return $('.add-task');
-        }
     }]);
 
     function Main() {
         _classCallCheck(this, Main);
 
-        this.tablePaginationAndSortInit();
-        this.changeImage();
-        this.preview();
+        this.makeBet();
     }
 
     _createClass(Main, [{
-        key: 'preview',
-        value: function preview() {
-            Main.ADD_TASK.on('click', '.preview', function () {
-                var name = Main.ADD_TASK.find('input[name="name"]').val(),
-                    email = Main.ADD_TASK.find('input[name="email"]').val(),
-                    description = Main.ADD_TASK.find('input[name="description"]').val(),
-                    fileName = Main.ADD_TASK.find('img').attr('src'),
-                    imagePath = '' + fileName;
+        key: 'makeBet',
+        value: function makeBet() {
+            $('.make-bet').submit(function (e) {
+                e.preventDefault();
 
-                var img = new Image();
-                img.src = imagePath;
-                img.width = 320;
-                img.height = 240;
+                var amount = $('#amount').val(),
+                    number = $('#number').val();
 
-                Main.BASICMODAL.find('.name').text(name);
-                Main.BASICMODAL.find('.email').text(email);
-                Main.BASICMODAL.find('.description').text(description);
-                Main.BASICMODAL.find('.image').html(img);
-                Main.BASICMODAL.modal('show');
-            });
-        }
-    }, {
-        key: 'tablePaginationAndSortInit',
-        value: function tablePaginationAndSortInit() {
-            $('#main-table, #admin-table').dataTable({
-                "pageLength": 3,
-                "lengthChange": false
-            });
-        }
-    }, {
-        key: 'changeImage',
-        value: function changeImage() {
-            var _this = this;
-
-            $('.add-task').on('change', 'input[type=file]', function (e) {
-                var file = $(e.currentTarget)[0].files[0],
-                    image = file.name,
-                    callback = function callback(response) {
-                    var imagePath = '/images/' + response.filename;
-
-                    if ($('.add-task img').size() > 0) {
-                        $('.add-task img').attr('src', imagePath);
-                    } else {
-                        var img = new Image();
-                        img.src = imagePath;
-                        img.width = 320;
-                        img.height = 240;
-
-                        $('.btn-file').after(img);
+                var params = {
+                    url: Main.AJAX_USER_CROP_PHOTO_URL,
+                    data: {
+                        T: 'n',
+                        I: number,
+                        C: '1',
+                        K: amount
                     }
                 };
 
-                _this.filesUploadData = {
-                    file: file,
-                    callback: callback,
-                    url: Main.AJAX_USER_UPLOAD_FILE_URL
-                };
+                _Ajax.ajax.buildParams(params);
+                _Request.request.makeRequest(function (responce) {
 
-                _this.filesUpload();
+                    Main.BASICMODAL.find('h3').text(responce.message);
+                    Main.BASICMODAL.modal('show');
+                });
             });
-        }
-    }, {
-        key: 'filesUpload',
-        value: function filesUpload() {
-            if (this.filesUploadData.file) {
-                _Files.files.upload(this.filesUploadData);
-            }
         }
     }]);
 

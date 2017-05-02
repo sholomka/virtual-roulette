@@ -11,39 +11,64 @@ use Application\Core\Model;
  */
 class ModelAdmin extends Model
 {
+
+
     /**
-     * Запрос на подсчет всех задач
+     * Запрос на обновление суммы ставки
      *
      * @var string
      */
-    public static $allTasks = "SELECT COUNT(*) FROM tasks";
+    public static $amountSave = "INSERT INTO bets 
+                                 SET 
+                                    betAmount = :betAmount,   
+                                    number = :number,
+                                    userID = :userID
+                                ";
 
     /**
-     * Запрос на вывод всех задач
+     * Запрос на обновление выиграшной суммы
      *
      * @var string
      */
-    public static $getTasks = "SELECT 
-                                   id,
-                                   name, 
-                                   email, 
-                                   description, 
-                                   image, 
-                                   status
-                               FROM tasks";
+    public static $wonAmountSave = "UPDATE bets 
+                                    SET 
+                                       wonAmount = :wonAmount
+                                    WHERE 
+                                        spinID = :spinID 
+                                    AND userID = :userID";
 
     /**
-     * Получение всех задач
-     *
-     * @return array
+     * Сохраняет сумму и номер ставки
      */
-    public function getData()
+    public function amountSave()
     {
-        $stmt = $this->doStatement(self::$getTasks);
+        $betAmount = $this->request->getProperty('K');
+        $number = $this->request->getProperty('I');
+        $userID = static::$sessionRegistry->getUserId();
 
-        if ($result = $stmt->fetchAll(\PDO::FETCH_OBJ)) {
-            return $result;
-        }
+        return (bool) $this->doStatement(self::$amountSave,  [
+            ':betAmount' => $betAmount,
+            ':number' => $number,
+            ':userID' => $userID
+        ]);
+    }
+
+    /**
+     * Сохраняет сумму и номер ставки
+     *
+     * @param $wonAmount
+     * @return bool
+     */
+    public function wonAmountSave($wonAmount)
+    {
+        $userID = static::$sessionRegistry->getUserId();
+        $spinID =  $this->id;
+
+        return (bool) $this->doStatement(self::$wonAmountSave, [
+            ':wonAmount' => $wonAmount,
+            ':userID' => $userID,
+            ':spinID' => $spinID
+        ]);
     }
 }
 

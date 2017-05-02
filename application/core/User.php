@@ -1,40 +1,54 @@
 <?php
 
 namespace  Application\Core;
+use Application\Core\Model;
 
-class User
+class User extends Model
 {
-    private $id;
-    private $username;
-    private $db;
+
+    /**
+     * ID авторизированного пользователя
+     *
+     * @var
+     */
     private $user_id;
 
-    private $db_host = "localhost";
-    private $db_name = "testdb";
-    private $db_user = "testdb";
-    private $db_pass = "testdb";
+    /**
+     * Авторизированный пользователь
+     *
+     * @var
+     */
+    private $user;
 
+
+    /**
+     * Флаг авторизации пользователя
+     *
+     * @var bool
+     */
     private $is_authorized = false;
 
-    public function __construct($username = null, $password = null)
-    {
-        $this->username = $username;
-        $this->connectDb($this->db_name, $this->db_user, $this->db_pass, $this->db_host);
-    }
-
-    public function __destruct()
-    {
-        $this->db = null;
-    }
-
+    /**
+     * Проверяет авторизирован ли пользователь
+     *
+     * @return bool
+     */
     public static function isAuthorized()
     {
-        if (!empty($_SESSION["user_id"])) {
-            return (bool) $_SESSION["user_id"];
+        if (!empty(static::$sessionRegistry->getUser())) {
+            return (bool) static::$sessionRegistry->getUser();
         }
         return false;
     }
 
+    /**
+     * Хеширование пароля
+     *
+     * @param $password
+     * @param null $salt
+     * @param int $iterations
+     * @return array
+     */
     public function passwordHash($password, $salt = null, $iterations = 10)
     {
         $salt || $salt = uniqid();
@@ -47,14 +61,22 @@ class User
         return array('hash' => $hash, 'salt' => $salt);
     }
 
-    public function getSalt($username) {
-        $query = "select salt from users where username = :username limit 1";
-        $sth = $this->db->prepare($query);
-        $sth->execute(
-            array(
-                ":username" => $username
-            )
-        );
+    /**
+     * Получение соли дял пароля
+     *
+     * @param $username
+     * @return bool
+     */
+    public function getSalt($username)
+    {
+        $query = "SELECT salt 
+                  FROM users 
+                  WHERE username = :username limit 1";
+
+        $sth = $this->doStatement($query, array(
+            ":username" => $username
+        ));
+
         $row = $sth->fetch();
         if (!$row) {
             return false;
@@ -62,11 +84,21 @@ class User
         return $row["salt"];
     }
 
-    public function authorize($username, $password, $remember=false)
+    /**
+     * Авторизациия пользователя
+     *
+     * @param $username
+     * @param $password
+     * @param bool $remember
+     * @return bool
+     */
+    public function authorize($username, $password, $remember = false)
     {
-        $query = "select id, username from users where
-            username = :username and password = :password limit 1";
-        $sth = $this->db->prepare($query);
+        $query = "SELECT id, username 
+                  FROM users 
+                  WHERE username = :username 
+                  AND password = :password limit 1";
+
         $salt = $this->getSalt($username);
 
         if (!$salt) {
@@ -74,96 +106,51 @@ class User
         }
 
         $hashes = $this->passwordHash($password, $salt);
-        $sth->execute(
-            array(
-                ":username" => $username,
-                ":password" => $hashes['hash'],
-            )
-        );
-        $this->user = $sth->fetch();
+
+        $sth = $this->doStatement($query, array(
+            ":username" => $username,
+            ":password" => $hashes['hash'],
+        ));
+
+        $this->user = $sth->fetch(\PDO::FETCH_OBJ);
 
         if (!$this->user) {
             $this->is_authorized = false;
         } else {
             $this->is_authorized = true;
-            $this->user_id = $this->user['id'];
+            $this->user_id = $this->user->id;
             $this->saveSession($remember);
         }
 
         return $this->is_authorized;
     }
 
-    public function logout()
+    /**
+     * Разлогинивает юзера
+     */
+    public static function logout()
     {
-        if (!empty($_SESSION["user_id"])) {
-            unset($_SESSION["user_id"]);
-        }
+        session_start();
+        session_destroy();
+        unset($_SESSION);
+        header('Location:/login/');
+        exit;
     }
 
-    public function saveSession($remember = false, $http_only = true, $days = 7)
+    public function saveSession($remember = false, $http_only = true, $days = 1, $hours = 1, $seconds = 3600)
     {
-        $_SESSION["user_id"] = $this->user_id;
+        self::$sessionRegistry->setUser($this->user);
 
         if ($remember) {
             // Save session id in cookies
             $sid = session_id();
 
-            $expire = time() + $days * 24 * 3600;
+            $expire = time() + $days * $hours * $seconds;
             $domain = ""; // default domain
             $secure = false;
             $path = "/";
 
-            $cookie = setcookie("sid", $sid, $expire, $path, $domain, $secure, $http_only);
+            $cookie = setcookie("PHPSESSID", $sid, $expire, $path, $domain, $secure, $http_only);
         }
-    }
-
-    public function create($username, $password) {
-        $user_exists = $this->getSalt($username);
-
-        if ($user_exists) {
-            throw new \Exception("User exists: " . $username, 1);
-        }
-
-        $query = "insert into users (username, password, salt)
-            values (:username, :password, :salt)";
-        $hashes = $this->passwordHash($password);
-        $sth = $this->db->prepare($query);
-
-        try {
-            $this->db->beginTransaction();
-            $result = $sth->execute(
-                array(
-                    ':username' => $username,
-                    ':password' => $hashes['hash'],
-                    ':salt' => $hashes['salt'],
-                )
-            );
-            $this->db->commit();
-        } catch (\PDOException $e) {
-            $this->db->rollback();
-            echo "Database error: " . $e->getMessage();
-            die();
-        }
-
-        if (!$result) {
-            $info = $sth->errorInfo();
-            printf("Database error %d %s", $info[1], $info[2]);
-            die();
-        }
-
-        return $result;
-    }
-
-    public function connectdb($db_name, $db_user, $db_pass, $db_host = "localhost")
-    {
-        try {
-            $this->db = new \pdo("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-        } catch (\pdoexception $e) {
-            echo "database error: " . $e->getmessage();
-            die();
-        }
-        $this->db->query('set names utf8');
-
-        return $this;
     }
 }

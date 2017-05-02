@@ -3,6 +3,7 @@
 namespace  Application\Core;
 
 use Application\Core\ApplicationRegistry;
+use Application\Core\SessionRegistry;
 use Application\Core\RequestRegistry;
 
 /**
@@ -24,19 +25,47 @@ abstract class Model
     private static $statements = [];
 
     /**
+     * Реестр уровня сессии
+     *
+     * @var \Application\Core\SessionRegistry|null
+     */
+    protected static $sessionRegistry;
+
+    /**
      * Model constructor.
      */
     public function __construct()
     {
-        $applicationRegistry = ApplicationRegistry::instance();
-        $applicationRegistry->init();
-        $dsn = $applicationRegistry->getDSN();
-        $username = $applicationRegistry->getUserName();
-        $password = $applicationRegistry->getPassword();
+        $this->applicationRegistry = ApplicationRegistry::instance();
+        self::$sessionRegistry = SessionRegistry::instance();
+        $this->applicationRegistry ->init();
         $this->request = RequestRegistry::instance()->getRequest();
-        $applicationRegistry->ensure($dsn, 'DSN не определен');
-        self::$DB = new \PDO($dsn, $username, $password);
-        self::$DB->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->connectDb();
+    }
+
+    /**
+     * Соединение с базой
+     *
+     * @return $this
+     */
+    public function connectDb()
+    {
+        $dsn = $this->applicationRegistry->getDSN();
+        $username = $this->applicationRegistry->getUserName();
+        $password = $this->applicationRegistry->getPassword();
+        $this->applicationRegistry->ensure($dsn, 'DSN не определен');
+
+        try {
+            self::$DB = new \PDO($dsn, $username, $password);
+            self::$DB->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        } catch (\Pdoexception $e) {
+            echo "database error: " . $e->getmessage();
+            die();
+        }
+
+        self::$DB->query('set names utf8');
+
+        return $this;
     }
 
     /**
@@ -50,7 +79,7 @@ abstract class Model
         if (isset(self::$statements[$statement])) {
             return self::$statements[$statement];
         }
-        
+
         $stmtHandle = self::$DB->prepare($statement);
         self::$statements[$statement] = $stmtHandle;
         return $stmtHandle;
@@ -67,8 +96,45 @@ abstract class Model
     {
         $sth = $this->prepareStatement($statement);
         $sth->closeCursor();
-        $dbResult = $sth->execute($values);
+
+        try {
+            self::$DB->beginTransaction();
+            $result = $sth->execute($values);
+
+            $this->id = self::$DB->lastInsertId();
+
+            self::$DB->commit();
+        } catch (\PDOException $e) {
+            self::$DB->rollback();
+            echo "Database error: " . $e->getMessage();
+            die();
+        }
+
+        if (!$result) {
+            $info = $sth->errorInfo();
+            printf("Database error %d %s", $info[1], $info[2]);
+            die();
+        }
+
         return $sth;
+    }
+
+    /**
+     * ID последней вставки
+     *
+     * @return string
+     */
+    protected function lastInsertId()
+    {
+        return self::$DB->lastInsertId();
+    }
+
+    /**
+     * __destruct
+     */
+    public function __destruct()
+    {
+        self::$DB = null;
     }
 }
 

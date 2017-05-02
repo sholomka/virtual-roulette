@@ -4,6 +4,9 @@ namespace  Application\Controllers;
 
 use Application\Core\Controller;
 use Application\Models\ModelAdmin;
+use Application\Core\User;
+
+use Application\Core\RouletteBetAnalyzer;
 
 /**
  * Class ControllerAdmin
@@ -25,8 +28,7 @@ class ControllerAdmin extends Controller
      */
     public function actionIndex()
     {
-        $data = $this->model->getData();
-        $this->view->generate('admin_view.php', 'template_view.php', $data);
+        $this->view->generate('admin_view.php', 'template_view.php');
     }
 
     /**
@@ -34,9 +36,59 @@ class ControllerAdmin extends Controller
      */
     public function actionLogout()
     {
-        session_start();
-        session_destroy();
-        header('Location:/');
+        User::logout();
+    }
+
+
+    public function isBetValid($bet)
+    {
+        //Create Instance
+        $checkInstance = new CheckBets();
+
+        //Check Valid
+        $validateBet = $checkInstance->IsValid($bet);
+        $isValid = $validateBet->getIsValid();
+        $betAmount = $validateBet->getBetAmount();
+
+        return [
+            'isValid' => $isValid,
+            'betAmount' => $betAmount
+        ];
+    }
+
+    public function actionMakeBet()
+    {
+        if ($this->request->isPost()) {
+            $bet = json_encode([[
+                'T' => $this->request->getProperty('T'),
+                'I' => $this->request->getProperty('I'),
+                'C' => $this->request->getProperty('C'),
+                'K' => $this->request->getProperty('K')
+            ]]);
+
+            $rouletteBetAnalyzer = new RouletteBetAnalyzer($bet);
+            $message = [];
+
+            if ($rouletteBetAnalyzer->getIsValid()) {
+                if ($this->model->amountSave()) {
+                    $message[] = $rouletteBetAnalyzer->getResponse();
+
+                    if ($rouletteBetAnalyzer->checkWin()) {
+                        $wonAmount = $rouletteBetAnalyzer->getWonAmount();
+
+                        if ($this->model->wonAmountSave($wonAmount)) {
+                            $message[] = $rouletteBetAnalyzer->estimateWin();
+                        }
+                    }
+
+                    echo json_encode(['message' => implode(' ', $message)]);
+                }
+            }
+
+           exit;
+        }
+
+        $this->view->generate('makebet_view.php', 'template_view.php');
     }
 }
 
