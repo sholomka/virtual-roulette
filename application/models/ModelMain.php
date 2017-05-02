@@ -10,7 +10,6 @@ use Application\Core\Model;
  */
 class ModelMain extends Model
 {
-
     /**
      * @var string
      */

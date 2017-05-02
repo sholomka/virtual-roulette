@@ -66,43 +66,65 @@ class RouletteBetAnalyzer
         $this->winNum = $this->generateWinNum();
     }
 
-
+    /**
+     * @return Classes\IsValidResponse
+     */
     public function getValidateBet()
     {
         return $this->checkInstance->IsValid($this->bet);
     }
 
+    /**
+     * @return bool
+     */
     public function getIsValid()
     {
         return $this->validateBet->getIsValid();
     }
 
+    /**
+     * @return int
+     */
     public function getBetAmount()
     {
         return $this->validateBet->getBetAmount();
     }
 
+    /**
+     * @return string
+     */
     public function getResponse()
     {
         return "Is bet valid: " . $this->getIsValid() . " bet amount in cents is: " . $this->getBetAmount();
     }
 
+    /**
+     * @return int
+     */
     public function generateWinNum()
     {
         return  mt_rand (self::WIN_NUM_MIN, self::WIN_NUM_MAX);
     }
 
-
+    /**
+     * @return int
+     */
     public function checkWin()
     {
         return $this->wonAmount = $this->checkInstance->EstimateWin($this->bet, $this->winNum);
     }
 
+    /**
+     * @return mixed
+     */
     public function getWonAmount()
     {
         return $this->wonAmount;
     }
 
+    /**
+     * @return string
+     */
     public function estimateWin()
     {
         return "User won: " . $this->getWonAmount() . " cents.";

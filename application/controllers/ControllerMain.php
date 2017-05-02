@@ -28,7 +28,7 @@ class ControllerMain extends Controller
         if ($this->sessionRegistry->isEmpty()) {
             header('Location:/login/');
         } else {
-            $this->view->generate('main_view.php', 'template_view.php');
+            $this->view->generate('admin_view.php', 'template_view.php');
         }
     }
 }

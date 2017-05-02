@@ -137,6 +137,15 @@ class User extends Model
         exit;
     }
 
+    /**
+     * Сохраняет сессию
+     *
+     * @param bool $remember
+     * @param bool $http_only
+     * @param int $days
+     * @param int $hours
+     * @param int $seconds
+     */
     public function saveSession($remember = false, $http_only = true, $days = 1, $hours = 1, $seconds = 3600)
     {
         self::$sessionRegistry->setUser($this->user);

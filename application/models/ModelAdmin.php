@@ -103,7 +103,6 @@ class ModelAdmin extends Model
         }
     }
 
-
     /**
      * Сохраняет сумму и номер ставки
      */

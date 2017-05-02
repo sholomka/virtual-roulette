@@ -120,16 +120,6 @@ abstract class Model
     }
 
     /**
-     * ID последней вставки
-     *
-     * @return string
-     */
-    protected function lastInsertId()
-    {
-        return self::$DB->lastInsertId();
-    }
-
-    /**
      * __destruct
      */
     public function __destruct()

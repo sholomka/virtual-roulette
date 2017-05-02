@@ -22,7 +22,7 @@
                         <div class="help-block"></div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-primary" type="submit">Сохранить изменения</button>
+                        <button class="btn btn-primary" type="submit" disabled>Сохранить изменения</button>
                     </div>
                 </form>
             </div>

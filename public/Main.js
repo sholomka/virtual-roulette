@@ -221,19 +221,47 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var Main = function () {
     _createClass(Main, null, [{
         key: 'AJAX_MAKE_BET_URL',
+
+        /**
+         * AJAX url для ставки
+         *
+         * @returns {string}
+         * @constructor
+         */
         get: function get() {
             return '/admin/makeBet';
         }
+
+        /**
+         * AJAX url для получения баланса
+         *
+         * @returns {string}
+         * @constructor
+         */
+
     }, {
         key: 'AJAX_GET_USER_BALANCE_URL',
         get: function get() {
             return '/admin/getUserBalance';
         }
+
+        /**
+         *  Всплывающее окно
+         *
+         * @returns {jQuery|HTMLElement}
+         * @constructor
+         */
+
     }, {
         key: 'BASICMODAL',
         get: function get() {
             return $('#basicModal');
         }
+
+        /**
+         * constructor
+         */
+
     }]);
 
     function Main() {
@@ -243,9 +271,18 @@ var Main = function () {
         this.getUserBalance();
     }
 
+    /**
+     * Сделать ставку
+     */
+
+
     _createClass(Main, [{
         key: 'makeBet',
         value: function makeBet() {
+            $('.make-bet').on('input', '#amount', function () {
+                $('.make-bet').find('button[type="submit"]').prop('disabled', $(this).val().trim() === '');
+            });
+
             $('.make-bet').submit(function (e) {
                 e.preventDefault();
 
@@ -269,6 +306,11 @@ var Main = function () {
                 });
             });
         }
+
+        /**
+         * Получить баланс юзера
+         */
+
     }, {
         key: 'getUserBalance',
         value: function getUserBalance() {
