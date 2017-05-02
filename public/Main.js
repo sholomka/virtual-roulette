@@ -220,9 +220,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Main = function () {
     _createClass(Main, null, [{
-        key: 'AJAX_USER_CROP_PHOTO_URL',
+        key: 'AJAX_MAKE_BET_URL',
         get: function get() {
             return '/admin/makeBet';
+        }
+    }, {
+        key: 'AJAX_GET_USER_BALANCE_URL',
+        get: function get() {
+            return '/admin/getUserBalance';
         }
     }, {
         key: 'BASICMODAL',
@@ -235,6 +240,7 @@ var Main = function () {
         _classCallCheck(this, Main);
 
         this.makeBet();
+        this.getUserBalance();
     }
 
     _createClass(Main, [{
@@ -247,7 +253,7 @@ var Main = function () {
                     number = $('#number').val();
 
                 var params = {
-                    url: Main.AJAX_USER_CROP_PHOTO_URL,
+                    url: Main.AJAX_MAKE_BET_URL,
                     data: {
                         T: 'n',
                         I: number,
@@ -258,8 +264,25 @@ var Main = function () {
 
                 _Ajax.ajax.buildParams(params);
                 _Request.request.makeRequest(function (responce) {
-
                     Main.BASICMODAL.find('h3').text(responce.message);
+                    Main.BASICMODAL.modal('show');
+                });
+            });
+        }
+    }, {
+        key: 'getUserBalance',
+        value: function getUserBalance() {
+            $('#user-balance').click(function (e) {
+                e.preventDefault();
+
+                var params = {
+                    url: Main.AJAX_GET_USER_BALANCE_URL,
+                    data: {}
+                };
+
+                _Ajax.ajax.buildParams(params);
+                _Request.request.makeRequest(function (responce) {
+                    Main.BASICMODAL.find('h3').text('User Balance: ' + responce.message);
                     Main.BASICMODAL.modal('show');
                 });
             });

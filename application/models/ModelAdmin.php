@@ -11,7 +11,19 @@ use Application\Core\Model;
  */
 class ModelAdmin extends Model
 {
-
+    /**
+     * Запрос на вывод всеё истории
+     *
+     * @var string
+     */
+    public static $getHistory = "SELECT 
+                                   spinID,
+                                   betAmount, 
+                                   wonAmount, 
+                                   dateAdd
+                                 FROM bets
+                                 WHERE userID = :userID";
+                               
 
     /**
      * Запрос на обновление суммы ставки
@@ -36,6 +48,61 @@ class ModelAdmin extends Model
                                     WHERE 
                                         spinID = :spinID 
                                     AND userID = :userID";
+
+    /**
+     * Оюновляет баланса пользователя
+     *
+     * @var string
+     */
+    public static $updateUserBalance = "UPDATE users 
+                                        SET 
+                                           userbalance = userbalance + :userbalance
+                                        WHERE 
+                                           id = :id";
+
+
+    /**
+     * Получает баланс пользователя
+     *
+     * @var string
+     */
+    public static $getUserBalance = "SELECT 
+                                      userbalance 
+                                     FROM users 
+                                     WHERE id = :id";
+
+
+    /**
+     * Сохраняет сумму и номер ставки
+     */
+    public function updateUserBalance($userbalance)
+    {
+        $id= static::$sessionRegistry->getUserId();
+
+        $this->doStatement(self::$updateUserBalance,  [
+            ':userbalance' => $userbalance,
+            ':id' => $id
+        ]);
+    }
+
+    /**
+     * Получает баланса пользователя
+     *
+     * @return mixed
+     */
+    public function getUserBalance()
+    {
+        $id = static::$sessionRegistry->getUserId();
+
+        $stmt = $this->doStatement(self::$getUserBalance, [
+            ':id' => $id
+        ]);
+
+        if ($result = $stmt->fetch(\PDO::FETCH_OBJ)) {
+            return $result;
+        }
+    }
+
 
     /**
      * Сохраняет сумму и номер ставки
@@ -69,6 +136,23 @@ class ModelAdmin extends Model
             ':userID' => $userID,
             ':spinID' => $spinID
         ]);
+    }
+
+    /**
+     * Возвращает всю историю ставок
+     *
+     * @return array
+     */
+    public function getGameHistory()
+    {
+        $userID = static::$sessionRegistry->getUserId();
+        $stmt = $this->doStatement(self::$getHistory, [
+            ':userID' => $userID
+        ]);
+
+        if ($result = $stmt->fetchAll(\PDO::FETCH_OBJ)) {
+            return $result;
+        }
     }
 }
 

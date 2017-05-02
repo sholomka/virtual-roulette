@@ -39,23 +39,9 @@ class ControllerAdmin extends Controller
         User::logout();
     }
 
-
-    public function isBetValid($bet)
-    {
-        //Create Instance
-        $checkInstance = new CheckBets();
-
-        //Check Valid
-        $validateBet = $checkInstance->IsValid($bet);
-        $isValid = $validateBet->getIsValid();
-        $betAmount = $validateBet->getBetAmount();
-
-        return [
-            'isValid' => $isValid,
-            'betAmount' => $betAmount
-        ];
-    }
-
+    /**
+     * Делает ставку
+     */
     public function actionMakeBet()
     {
         if ($this->request->isPost()) {
@@ -71,6 +57,8 @@ class ControllerAdmin extends Controller
 
             if ($rouletteBetAnalyzer->getIsValid()) {
                 if ($this->model->amountSave()) {
+
+                    $this->model->updateUserBalance(-$this->request->getProperty('K'));
                     $message[] = $rouletteBetAnalyzer->getResponse();
 
                     if ($rouletteBetAnalyzer->checkWin()) {
@@ -90,5 +78,28 @@ class ControllerAdmin extends Controller
 
         $this->view->generate('makebet_view.php', 'template_view.php');
     }
+
+    /**
+     * Получает историю игры
+     */
+    public function actionGetGameHistory()
+    {
+        $data = $this->model->getGameHistory();
+        $this->view->generate('gamehistory_view.php', 'template_view.php', $data);
+    }
+
+    /**
+     * Получает баланс пользователя
+     */
+    public function actionGetUserBalance()
+    {
+        $data = $this->model->getUserBalance();
+        echo json_encode(['message' => $data->userbalance]);
+        exit;
+    }
+
+
+
+
 }
 

@@ -26,11 +26,7 @@ class ControllerMain extends Controller
     public function actionIndex()
     {
         if ($this->sessionRegistry->isEmpty()) {
-
-
             header('Location:/login/');
-
-
         } else {
             $this->view->generate('main_view.php', 'template_view.php');
         }
