@@ -5,7 +5,6 @@ namespace  Application\Controllers;
 use Application\Core\Controller;
 use Application\Models\ModelAdmin;
 use Application\Core\User;
-
 use Application\Core\RouletteBetAnalyzer;
 
 /**
@@ -45,11 +44,13 @@ class ControllerAdmin extends Controller
     public function actionMakeBet()
     {
         if ($this->request->isPost()) {
+            $betCount = $this->request->getProperty('K');
+
             $bet = json_encode([[
                 'T' => $this->request->getProperty('T'),
                 'I' => $this->request->getProperty('I'),
                 'C' => $this->request->getProperty('C'),
-                'K' => $this->request->getProperty('K')
+                'K' => $betCount
             ]]);
 
             $rouletteBetAnalyzer = new RouletteBetAnalyzer($bet);
@@ -57,14 +58,16 @@ class ControllerAdmin extends Controller
 
             if ($rouletteBetAnalyzer->getIsValid()) {
                 if ($this->model->amountSave()) {
+                    $this->model->updateUserBalance(-$betCount);
+                    $this->setJackpotAmount($betCount);
 
-                    $this->model->updateUserBalance(-$this->request->getProperty('K'));
                     $message[] = $rouletteBetAnalyzer->getResponse();
 
                     if ($rouletteBetAnalyzer->checkWin()) {
                         $wonAmount = $rouletteBetAnalyzer->getWonAmount();
 
                         if ($this->model->wonAmountSave($wonAmount)) {
+                            $this->model->updateUserBalance($wonAmount);
                             $message[] = $rouletteBetAnalyzer->estimateWin();
                         }
                     }
@@ -98,8 +101,36 @@ class ControllerAdmin extends Controller
         exit;
     }
 
+    /**
+     * Показывает текущий Jackpot Amount
+     */
+    public function actionGetJackpotAmount()
+    {
+        $applicationRegistry = $this->applicationRegistry;
+        $memcache = $applicationRegistry::getMemcache();
 
+        echo $memcache->get('JackpotAmount');
+    }
 
+    /**
+     * Устанавливет JackpotAmount
+     *
+     * @param $betAmount
+     */
+    public function setJackpotAmount($betAmount)
+    {
+        $onePercent = 1 * 100 / $betAmount;
+        $applicationRegistry = $this->applicationRegistry;
+        $memcache = $applicationRegistry::getMemcache();
+        $jackpotAmount = 0;
 
+        try {
+            $jackpotAmount = $memcache->get('JackpotAmount');
+        } catch(\Exception $e) {
+        }
+
+        $jackpotAmountNew = $jackpotAmount + $onePercent;
+        $memcache->set('JackpotAmount', $jackpotAmountNew);
+    }
 }
 

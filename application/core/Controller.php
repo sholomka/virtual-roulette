@@ -50,6 +50,7 @@ abstract class Controller
     {
         $this->view = new View();
         $this->sessionRegistry = SessionRegistry::instance();
+        $this->applicationRegistry = ApplicationRegistry::instance();
         $this->request = RequestRegistry::instance()->getRequest();
     }
 

@@ -81,7 +81,6 @@ class ApplicationRegistry extends Registry
     {
         $this->ensure(file_exists($this->config), 'Файл конфигурации не найден');
         $options = @SimpleXML_load_file($this->config);
-
         $dsn = $options->dsn;
         $username = $options->username;
         $password = $options->password;
@@ -91,6 +90,14 @@ class ApplicationRegistry extends Registry
         self::setDSN($dsn);
         self::setUserName($username);
         self::setPassword($password);
+
+        try {
+            $memcache = new MemcacheRegistry();
+            self::setMemcache($memcache);
+        } catch (\Exception $e) {
+
+            echo $e->getMessage(); die;
+        }
     }
 
     /**
@@ -101,6 +108,16 @@ class ApplicationRegistry extends Registry
     private static function setDSN($dsn)
     {
         self::instance()->set('dsn', $dsn);
+    }
+
+    /**
+     * Устанавливает memcache
+     *
+     * @param $memcache
+     */
+    private static function setMemcache($memcache)
+    {
+        self::instance()->set('memcache', $memcache);
     }
 
     /**
@@ -179,6 +196,16 @@ class ApplicationRegistry extends Registry
     public static function getPassword()
     {
         return self::instance()->get('password');
+    }
+
+    /**
+     * Получает Memcache
+     *
+     * @return mixed|null
+     */
+    public static function getMemcache()
+    {
+        return self::instance()->get('memcache');
     }
 
     /**
